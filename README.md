@@ -1,5 +1,10 @@
-/*# Gsm_module_Cedat_Open_day
-A project for Cedat Open Day*/
+/* # Gsm_module_Cedat_Open_day
+  A project for Cedat Open Day
+*/
+
+
+
+
 /*
 #include <SoftwareSerial.h>
 
@@ -34,6 +39,17 @@ void sendATCommand(String command) {
     Serial.println(response);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
 /*
 #include <SoftwareSerial.h>
 
@@ -104,6 +120,13 @@ void makeCall(String phoneNumber) {
   sendATCommand(command);
 }
 //*/
+
+
+
+
+
+
+
 #include <SoftwareSerial.h>
 
 // Define the RX and TX pins for SoftwareSerial
