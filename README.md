@@ -201,13 +201,13 @@ void makeCall(String phoneNumber) {
 
 
 /*  cynthiaz code
-
+  
 // ultrasonic sensor pins
 const int trigPin =9;
-const int echopin =10;
+const int echoPin =10;
 
 // pump pin
-const int pupmpin =8;
+const int pumpPin =8;
 //distance threshold for activating the pump cm
 const int distanceThreshold =10;
 
@@ -256,5 +256,6 @@ void loop() {
   // Delay before next measurement
   delay(1000);
 }
+
 */
 
