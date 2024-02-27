@@ -1,75 +1,56 @@
 #include <SoftwareSerial.h>
-const String PHONE = "+256752132243";
-#define rxPin 2
-#define txPin 3
-SoftwareSerial sim800(rxPin, txPin);
-#define trigPin 6
-#define echoPin 7
- 
+
+// Define the RX and TX pins for SoftwareSerial
+const int rxPin = 2;  // Connect SIM800L TX to Arduino D2
+const int txPin = 3;  // Connect SIM800L RX to Arduino D3
+String number = "+256752132243";// codex by Ben Pato
+
+SoftwareSerial sim800lSerial(rxPin, txPin); // RX, TX
+
+const int trigPin = 9; // Trigger pin of the ultrasonic sensor
+const int echoPin = 10; // Echo pin of the ultrasonic sensor
+
 void setup() {
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
- 
   Serial.begin(9600);
- 
-  sim800.begin(9600);
-  Serial.println("SIM800L software serial initialize");
- 
-  sim800.println("AT");
+  sim800lSerial.begin(9600);
+  delay(2000);
+
+  Serial.println("Initializing GSM module...");
+  delay(1000);
+  sendATCommand("AT");
   delay(1000);
   sendATCommand("AT+CPIN?");
 
   // Set SMS mode
   sendATCommand("AT+CMGF=1");
-}
- 
-void loop() {
- 
-  while (sim800.available()) {
-    Serial.println(sim800.readString());
-  }
- 
-  while (Serial.available())  {
-    sim800.println(Serial.readString());
-  }
- 
-  long time_duration, distance_in_cm;
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  time_duration = pulseIn(echoPin, HIGH);
-  distance_in_cm = time_duration / 29 / 2;
- 
-  Serial.print(distance_in_cm);
-  Serial.println(" cm");
- 
-  if (distance_in_cm <= 10) {
-    Serial.println("Pump full");
-    Serial.println("sending message....");
-    sendSMS("+256752132243", "D1 OFF");
-    //sim800.println("ATD" + PHONE + ";");
-    delay(10000); //20 sec delay
-  }
-  else if (distance_in_cm > 110){
-    Serial.println("Pump empty");
-    Serial.println("sending message....");
-    sendSMS("+256752132243", "D1 ON");
-    //sim800.println("ATD" + PHONE + ";");
-    delay(10000); //20 sec delay
-  }
-  delay(500);
+
+  // Initialize ultrasonic sensor pins
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
 }
 
-// edit starts here
+void loop() {
+  // Measure distance using ultrasonic sensor
+  int distance = measureDistance();
+
+  // Set your distance threshold here
+  if (distance <= 10) {
+    // Distance is less than or equal to 10 cm, send command to stop pump
+    sendSMS(number, "D1 OFF");
+  }
+
+  else if(distance >= 110){
+    sendSMS(number, "D1 ON");
+  }
+  delay(10000); // Delay for 1 minute before checking again
+}
 
 void sendATCommand(String command) {
-  sim800.println(command);
+  sim800lSerial.println(command);
   delay(500);
 
-  while (sim800.available()) {
-    String response = sim800.readStringUntil('\n');
+  while (sim800lSerial.available()) {
+    String response = sim800lSerial.readStringUntil('\n');
     Serial.println(response);
   }
 }
@@ -78,8 +59,25 @@ void sendSMS(String phoneNumber, String message) {
   String command = "AT+CMGS=\"" + phoneNumber + "\"";
   sendATCommand(command);
   delay(500);
-  sim800.print(message);
+  sim800lSerial.print(message);
   delay(500);
-  sim800.write(26);  // End the SMS by sending Ctrl+Z
+  sim800lSerial.write(26);  // End the SMS by sending Ctrl+Z
   delay(1000);
+}
+
+int measureDistance() {
+  // Trigger the ultrasonic sensor to send a pulse
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Measure the time it takes for the echo to return
+  int duration = pulseIn(echoPin, HIGH);
+
+  // Calculate distance in centimeters
+  int distance = duration / 58;
+
+  return distance;
 }
